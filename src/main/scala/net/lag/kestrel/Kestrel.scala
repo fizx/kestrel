@@ -28,7 +28,7 @@ import org.apache.mina.core.session.IoSession
 import org.apache.mina.filter.codec.ProtocolCodecFilter
 import org.apache.mina.transport.socket.SocketAcceptor
 import org.apache.mina.transport.socket.nio.{NioProcessor, NioSocketAcceptor}
-import _root_.net.lag.configgy.{Config, ConfigMap, Configgy, RuntimeEnvironment}
+import _root_.net.lag.configgy.RuntimeEnvironment
 import _root_.net.lag.logging.Logger
 import _root_.net.lag.naggati.IoHandlerActorAdapter
 

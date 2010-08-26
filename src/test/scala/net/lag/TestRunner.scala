@@ -17,7 +17,6 @@
 
 package net.lag
 
-import net.lag.configgy.Configgy
 import net.lag.logging.Logger
 import org.specs.runner.SpecsFileRunner
 

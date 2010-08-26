@@ -23,7 +23,6 @@ import _root_.com.twitter.actors.Actor.actor
 import _root_.scala.collection.mutable
 import _root_.com.twitter.util.Time
 import _root_.com.twitter.util.TimeConversions._
-import _root_.net.lag.configgy.Config
 import _root_.org.specs._
 import _root_.org.specs.matcher.Matcher
 

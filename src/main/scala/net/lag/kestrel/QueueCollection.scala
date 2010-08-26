@@ -22,7 +22,6 @@ import java.util.concurrent.CountDownLatch
 import scala.collection.mutable
 import com.twitter.util.Time
 import com.twitter.util.TimeConversions._
-import net.lag.configgy.{Config, ConfigMap}
 import net.lag.logging.Logger
 
 
