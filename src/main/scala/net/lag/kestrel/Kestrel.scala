@@ -23,7 +23,7 @@ import java.util.{Timer, TimerTask}
 import com.twitter.actors.{Actor, Scheduler}
 import com.twitter.actors.Actor._
 import scala.collection.mutable
-import com.twitter.util.Time
+import com.twitter.util.{Eval, Time}
 import org.apache.mina.core.session.IoSession
 import org.apache.mina.filter.codec.ProtocolCodecFilter
 import org.apache.mina.transport.socket.SocketAcceptor
@@ -64,26 +64,13 @@ object Kestrel {
 
   def main(args: Array[String]): Unit = {
     runtime.load(args)
-    startup(Configgy.config)
+    val config = Eval[kestrel.config.Kestrel](runtime.configFilename)
+    startup(config)
   }
 
-  def configure(config: ConfigMap): Unit = {
-    // fill in defaults for all queues
-    PersistentQueue.maxItems = config.getInt("max_items", Math.MAX_INT)
-    PersistentQueue.maxSize = config.getLong("max_size", Math.MAX_LONG)
-    PersistentQueue.maxItemSize = config.getLong("max_item_size", Math.MAX_LONG)
-    PersistentQueue.maxAge = config.getInt("max_age", 0)
-    PersistentQueue.maxJournalSize = config.getInt("max_journal_size", 16 * 1024 * 1024)
-    PersistentQueue.maxMemorySize = config.getInt("max_memory_size", 128 * 1024 * 1024)
-    PersistentQueue.maxJournalOverflow = config.getInt("max_journal_overflow", 10)
-    PersistentQueue.discardOldWhenFull = config.getBool("discard_old_when_full", false)
-    PersistentQueue.keepJournal = config.getBool("journal", true)
-    PersistentQueue.syncJournal = config.getBool("sync_journal", false)
-  }
-
-  def startup(config: Config): Unit = {
+  def startup(config: kestrel.config.Kestrel): Unit = {
     // this one is used by the actor initialization, so can only be set at startup.
-    var maxThreads = config.getInt("max_threads", Runtime.getRuntime().availableProcessors * 2)
+    var maxThreads = config.maxThreads
 
     /* If we don't set this to at least 4, we get an IllegalArgumentException when constructing
      * the ThreadPoolExecutor from inside FJTaskScheduler2 on a single-processor box.
@@ -95,11 +82,11 @@ object Kestrel {
     System.setProperty("actors.maxPoolSize", maxThreads.toString)
     log.debug("max_threads=%d", maxThreads)
 
-    val listenAddress = config.getString("host", "0.0.0.0")
-    val listenPort = config.getInt("port", DEFAULT_PORT)
-    queues = new QueueCollection(config.getString("queue_path", "/tmp"), config.configMap("queues"))
-    configure(config)
-    config.subscribe { c => configure(c.getOrElse(new Config)) }
+    PersistentQueue.config = config
+    val listenAddress = config.listenAddress
+    val listenPort = config.port
+    queues = new QueueCollection(config.queuePath, config.queues)
+//    config.subscribe { c => configure(c.getOrElse(new Config)) }
 
     queues.loadQueues()
 
@@ -110,18 +97,18 @@ object Kestrel {
     acceptor.setBacklog(1000)
     acceptor.setReuseAddress(true)
     acceptor.getSessionConfig.setTcpNoDelay(true)
-    val protocolCodec = config.getString("protocol", "ascii")
+    val protocolCodec = config.protocol
     acceptor.getFilterChain.addLast("codec", new ProtocolCodecFilter(
       memcache.Codec.encoderFor(protocolCodec),
       memcache.Codec.decoderFor(protocolCodec)))
-    acceptor.setHandler(new IoHandlerActorAdapter(session => new KestrelHandler(session, config)))
+    acceptor.setHandler(new IoHandlerActorAdapter(session => new KestrelHandler(session, config.timeout)))
     acceptor.bind(new InetSocketAddress(listenAddress, listenPort))
 
     // expose config thru JMX.
-    config.registerWithJmx("net.lag.kestrel")
+    //config.registerWithJmx("net.lag.kestrel")
 
     // optionally, start a periodic timer to clean out expired items.
-    val expirationTimerFrequency = config.getInt("expiration_timer_frequency_seconds", 0)
+    val expirationTimerFrequency = config.expirationTimerFrequency.inSeconds
     if (expirationTimerFrequency > 0) {
       val timer = new Timer("Expiration timer", true)
       val expirationTask = new TimerTask {

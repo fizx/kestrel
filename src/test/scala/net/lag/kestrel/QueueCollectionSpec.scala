@@ -45,7 +45,7 @@ class QueueCollectionSpec extends Specification with TestHelper {
 
     "create a queue" in {
       withTempFolder {
-        qc = new QueueCollection(folderName, Config.fromMap(Map.empty))
+        qc = new QueueCollection(folderName, Map.empty)
         qc.queueNames mustEqual Nil
 
         qc.add("work1", "stuff".getBytes)
@@ -69,7 +69,7 @@ class QueueCollectionSpec extends Specification with TestHelper {
 
     "load from journal" in {
       withTempFolder {
-        qc = new QueueCollection(folderName, Config.fromMap(Map.empty))
+        qc = new QueueCollection(folderName, Map.empty)
         qc.add("ducklings", "huey".getBytes)
         qc.add("ducklings", "dewey".getBytes)
         qc.add("ducklings", "louie".getBytes)
@@ -78,7 +78,7 @@ class QueueCollectionSpec extends Specification with TestHelper {
         qc.currentItems mustEqual 3
         qc.shutdown
 
-        qc = new QueueCollection(folderName, Config.fromMap(Map.empty))
+        qc = new QueueCollection(folderName, Map.empty)
         qc.queueNames mustEqual Nil
         new String(qc.receive("ducklings").get) mustEqual "huey"
         // now the queue should be suddenly instantiated:
@@ -89,7 +89,7 @@ class QueueCollectionSpec extends Specification with TestHelper {
 
     "queue hit/miss tracking" in {
       withTempFolder {
-        qc = new QueueCollection(folderName, Config.fromMap(Map.empty))
+        qc = new QueueCollection(folderName, Map.empty)
         qc.add("ducklings", "ugly1".getBytes)
         qc.add("ducklings", "ugly2".getBytes)
         qc.queueHits() mustEqual 0
@@ -118,7 +118,7 @@ class QueueCollectionSpec extends Specification with TestHelper {
       withTempFolder {
         new File(folderName + "/apples").createNewFile()
         new File(folderName + "/oranges").createNewFile()
-        qc = new QueueCollection(folderName, Config.fromMap(Map.empty))
+        qc = new QueueCollection(folderName, Map.empty)
         qc.loadQueues()
         sorted(qc.queueNames) mustEqual List("apples", "oranges")
       }
@@ -129,7 +129,7 @@ class QueueCollectionSpec extends Specification with TestHelper {
         new File(folderName + "/apples").createNewFile()
         new File(folderName + "/oranges").createNewFile()
         new File(folderName + "/oranges~~900").createNewFile()
-        qc = new QueueCollection(folderName, Config.fromMap(Map.empty))
+        qc = new QueueCollection(folderName, Map.empty)
         qc.loadQueues()
         sorted(qc.queueNames) mustEqual List("apples", "oranges")
       }
@@ -139,7 +139,7 @@ class QueueCollectionSpec extends Specification with TestHelper {
       withTempFolder {
         new File(folderName + "/apples").createNewFile()
         new File(folderName + "/oranges").createNewFile()
-        qc = new QueueCollection(folderName, Config.fromMap(Map.empty))
+        qc = new QueueCollection(folderName, Map.empty)
         qc.loadQueues()
         qc.delete("oranges")
 
@@ -151,7 +151,7 @@ class QueueCollectionSpec extends Specification with TestHelper {
     "fanout queues" in {
       "generate on the fly" in {
         withTempFolder {
-          qc = new QueueCollection(folderName, Config.fromMap(Map.empty))
+          qc = new QueueCollection(folderName, Map.empty)
           qc.add("jobs", "job1".getBytes)
           qc.receive("jobs+client1") mustEqual None
           qc.add("jobs", "job2".getBytes)
@@ -166,7 +166,7 @@ class QueueCollectionSpec extends Specification with TestHelper {
         withTempFolder {
           new File(folderName + "/jobs").createNewFile()
           new File(folderName + "/jobs+client1").createNewFile()
-          qc = new QueueCollection(folderName, Config.fromMap(Map.empty))
+          qc = new QueueCollection(folderName, Map.empty)
           qc.loadQueues()
           qc.add("jobs", "job1".getBytes)
           new String(qc.receive("jobs+client1").get) mustEqual "job1"
@@ -182,7 +182,7 @@ class QueueCollectionSpec extends Specification with TestHelper {
         withTempFolder {
           new File(folderName + "/jobs").createNewFile()
           new File(folderName + "/jobs+client1").createNewFile()
-          qc = new QueueCollection(folderName, Config.fromMap(Map.empty))
+          qc = new QueueCollection(folderName, Map.empty)
           qc.loadQueues()
           qc.add("jobs", "job1".getBytes)
 
@@ -202,7 +202,9 @@ class QueueCollectionSpec extends Specification with TestHelper {
       withTempFolder {
         new File(folderName + "/jobs").createNewFile()
         new File(folderName + "/expired").createNewFile()
-        qc = new QueueCollection(folderName, Config.fromMap(Map("jobs.move_expired_to" -> "expired")))
+        qc = new QueueCollection(folderName, Map("jobs" -> new kestrel.config.PersistentQueue {
+          override lazy val expiredQueue = Some("expired")
+        }))
         Kestrel.queues = qc
         qc.loadQueues()
         qc.add("jobs", "hello".getBytes, 1)

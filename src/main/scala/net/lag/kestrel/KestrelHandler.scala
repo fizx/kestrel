@@ -23,9 +23,8 @@ import java.nio.ByteOrder
 import com.twitter.actors.Actor
 import com.twitter.actors.Actor._
 import scala.collection.mutable
-import com.twitter.util.Time
+import com.twitter.util.{Duration, Time}
 import com.twitter.util.TimeConversions._
-import net.lag.configgy.{Config, Configgy, RuntimeEnvironment}
 import net.lag.logging.Logger
 import net.lag.naggati.{IoHandlerActorAdapter, MinaMessage, ProtocolError}
 import org.apache.mina.core.buffer.IoBuffer
@@ -33,10 +32,9 @@ import org.apache.mina.core.session.{IdleStatus, IoSession}
 import org.apache.mina.transport.socket.SocketSessionConfig
 
 
-class KestrelHandler(val session: IoSession, val config: Config) extends Actor {
+class KestrelHandler(val session: IoSession, val timeout: Duration) extends Actor {
   private val log = Logger.get
 
-  private val IDLE_TIMEOUT = 60
   private val sessionID = KestrelStats.sessionID.incr
   private val remoteAddress = session.getRemoteAddress.asInstanceOf[InetSocketAddress]
 
@@ -50,8 +48,7 @@ class KestrelHandler(val session: IoSession, val config: Config) extends Actor {
   IoHandlerActorAdapter.filter(session) -= MinaMessage.SessionOpened
   IoHandlerActorAdapter.filter(session) -= classOf[MinaMessage.MessageSent]
 
-  // config can be null in unit tests
-  val idleTimeout = if (config == null) IDLE_TIMEOUT else config.getInt("timeout", IDLE_TIMEOUT)
+  val idleTimeout = timeout.inSeconds
   if (idleTimeout > 0) {
     session.getConfig.setIdleTime(IdleStatus.BOTH_IDLE, idleTimeout)
   }
@@ -121,7 +118,8 @@ class KestrelHandler(val session: IoSession, val config: Config) extends Actor {
       case "STATS" => stats
       case "SHUTDOWN" => shutdown
       case "RELOAD" =>
-        Configgy.reload
+        //Configgy.reload
+        log.debug("Not reimplemented for eval yet")
         writeResponse("Reloaded config.\r\n")
       case "FLUSH" =>
         flush(request.line(1))

@@ -21,7 +21,6 @@ import java.io._
 import java.nio.{ByteBuffer, ByteOrder}
 import java.nio.channels.FileChannel
 import com.twitter.util.Time
-import net.lag.configgy.{Config, ConfigMap}
 import net.lag.logging.Logger
 
 

@@ -29,7 +29,7 @@ import net.lag.logging.Logger
 class InaccessibleQueuePath extends Exception("Inaccessible queue path: Must be a directory and writable")
 
 
-class QueueCollection(queueFolder: String, private var queueConfigs: ConfigMap) {
+class QueueCollection(queueFolder: String, private var queueConfigs: Map[String, kestrel.config.PersistentQueue]) {
   private val log = Logger.get
 
   private val path = new File(queueFolder)
@@ -52,11 +52,11 @@ class QueueCollection(queueFolder: String, private var queueConfigs: ConfigMap) 
   val queueHits = new Counter()
   val queueMisses = new Counter()
 
-  queueConfigs.subscribe { c =>
+/*  queueConfigs.subscribe { c =>
     synchronized {
       queueConfigs = c.getOrElse(new Config)
     }
-  }
+  } */
 
   // preload any queues
   def loadQueues() {
@@ -84,9 +84,9 @@ class QueueCollection(queueFolder: String, private var queueConfigs: ConfigMap) 
           val master = name.split('+')(0)
           fanout_queues.getOrElseUpdate(master, new mutable.HashSet[String]) += name
           log.info("Fanout queue %s added to %s", name, master)
-          new PersistentQueue(path.getPath, name, queueConfigs.configMap(master))
+          new PersistentQueue(path.getPath, name, queueConfigs.getOrElse(master, PersistentQueue.config))
         } else {
-          new PersistentQueue(path.getPath, name, queueConfigs.configMap(name))
+          new PersistentQueue(path.getPath, name, queueConfigs.getOrElse(name, PersistentQueue.config))
         }
         q.setup
         queues(name) = q
