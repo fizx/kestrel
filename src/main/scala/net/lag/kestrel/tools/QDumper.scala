@@ -19,7 +19,7 @@ package net.lag.kestrel.tools
 
 import java.io.{FileNotFoundException, IOException}
 import scala.collection.mutable
-import com.twitter.xrayspecs.Time
+import com.twitter.util.Time
 
 
 class QueueDumper(filename: String) {

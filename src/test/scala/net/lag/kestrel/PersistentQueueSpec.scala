@@ -21,8 +21,8 @@ import _root_.java.io.{File, FileInputStream}
 import _root_.java.util.concurrent.CountDownLatch
 import _root_.com.twitter.actors.Actor.actor
 import _root_.scala.collection.mutable
-import _root_.com.twitter.xrayspecs.Time
-import _root_.com.twitter.xrayspecs.TimeConversions._
+import _root_.com.twitter.util.Time
+import _root_.com.twitter.util.TimeConversions._
 import _root_.net.lag.configgy.Config
 import _root_.org.specs._
 import _root_.org.specs.matcher.Matcher

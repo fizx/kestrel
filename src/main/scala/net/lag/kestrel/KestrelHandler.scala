@@ -23,8 +23,8 @@ import java.nio.ByteOrder
 import com.twitter.actors.Actor
 import com.twitter.actors.Actor._
 import scala.collection.mutable
-import com.twitter.xrayspecs.Time
-import com.twitter.xrayspecs.TimeConversions._
+import com.twitter.util.Time
+import com.twitter.util.TimeConversions._
 import net.lag.configgy.{Config, Configgy, RuntimeEnvironment}
 import net.lag.logging.Logger
 import net.lag.naggati.{IoHandlerActorAdapter, MinaMessage, ProtocolError}

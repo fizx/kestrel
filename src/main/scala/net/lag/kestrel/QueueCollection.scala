@@ -20,8 +20,8 @@ package net.lag.kestrel
 import java.io.File
 import java.util.concurrent.CountDownLatch
 import scala.collection.mutable
-import com.twitter.xrayspecs.Time
-import com.twitter.xrayspecs.TimeConversions._
+import com.twitter.util.Time
+import com.twitter.util.TimeConversions._
 import net.lag.configgy.{Config, ConfigMap}
 import net.lag.logging.Logger
 

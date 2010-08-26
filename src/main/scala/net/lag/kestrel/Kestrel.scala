@@ -23,7 +23,7 @@ import java.util.{Timer, TimerTask}
 import com.twitter.actors.{Actor, Scheduler}
 import com.twitter.actors.Actor._
 import scala.collection.mutable
-import com.twitter.xrayspecs.Time
+import com.twitter.util.Time
 import org.apache.mina.core.session.IoSession
 import org.apache.mina.filter.codec.ProtocolCodecFilter
 import org.apache.mina.transport.socket.SocketAcceptor

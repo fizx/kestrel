@@ -23,7 +23,7 @@ import java.nio.channels.FileChannel
 import java.util.concurrent.CountDownLatch
 import com.twitter.actors.{Actor, TIMEOUT}
 import scala.collection.mutable
-import com.twitter.xrayspecs.Time
+import com.twitter.util.Time
 import net.lag.configgy.{Config, Configgy, ConfigMap}
 import net.lag.logging.Logger
 

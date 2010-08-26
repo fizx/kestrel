@@ -19,8 +19,8 @@ package net.lag.kestrel
 
 import _root_.java.io.{File, FileInputStream}
 import _root_.scala.util.Sorting
-import _root_.com.twitter.xrayspecs.Time
-import _root_.com.twitter.xrayspecs.TimeConversions._
+import _root_.com.twitter.util.Time
+import _root_.com.twitter.util.TimeConversions._
 import _root_.net.lag.configgy.Config
 import _root_.org.specs._
 
