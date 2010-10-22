@@ -4,28 +4,28 @@ import com.twitter.util.Duration
 import com.twitter.util.TimeConversions._
 
 trait PersistentQueue {
-  lazy val maxItems: Int = Math.MAX_INT
-  lazy val maxSize: Long = Math.MAX_LONG
-  lazy val maxItemSize: Long = Math.MAX_LONG
-  lazy val maxAge: Int = 0
-  lazy val maxJournalSize: Long = 16L * 1024 * 1024 // 16MB
-  lazy val maxMemorySize: Long = 128L * 1024 * 1024 // 128MB
-  lazy val maxJournalOverflow: Int = 10
-  lazy val maxJournalSizeAbsolute: Long = Math.MAX_LONG
-  lazy val discardOldWhenFull: Boolean = false
-  lazy val keepJournal: Boolean = true
-  lazy val syncJournal: Boolean = false
-  lazy val expiredQueue: Option[String] = None
+  def maxItems: Int = Math.MAX_INT
+  def maxSize: Long = Math.MAX_LONG
+  def maxItemSize: Long = Math.MAX_LONG
+  def maxAge: Int = 0
+  def maxJournalSize: Long = 16L * 1024 * 1024 // 16MB
+  def maxMemorySize: Long = 128L * 1024 * 1024 // 128MB
+  def maxJournalOverflow: Int = 10
+  def maxJournalSizeAbsolute: Long = Math.MAX_LONG
+  def discardOldWhenFull: Boolean = false
+  def keepJournal: Boolean = true
+  def syncJournal: Boolean = false
+  def expiredQueue: Option[String] = None
 }
 
 trait Kestrel extends PersistentQueue {
-  val queues: Map[String, PersistentQueue]
+  def queues: Map[String, PersistentQueue]
 
-  lazy val maxThreads: Int = Runtime.getRuntime().availableProcessors * 2
-  lazy val listenAddress: String = "0.0.0.0"
-  lazy val port = 22133
-  lazy val queuePath: String = "/tmp"
-  lazy val protocol: String = "ascii"
-  lazy val expirationTimerFrequency: Duration = 0.seconds
-  lazy val timeout: Duration = 60.seconds
+  def maxThreads: Int = Runtime.getRuntime().availableProcessors * 2
+  def listenAddress: String = "0.0.0.0"
+  def port = 22133
+  def queuePath: String = "/tmp"
+  def protocol: String = "ascii"
+  def expirationTimerFrequency: Duration = 0.seconds
+  def timeout: Duration = 60.seconds
 }

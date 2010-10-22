@@ -24,6 +24,7 @@ import java.util.concurrent.CountDownLatch
 import com.twitter.actors.{Actor, TIMEOUT}
 import scala.collection.mutable
 import com.twitter.util.Time
+import net.lag.configgy.ConfigMap
 import net.lag.logging.Logger
 
 
@@ -36,8 +37,51 @@ import net.lag.logging.Logger
   def apply() = local.getOrElse(base)
 } */
 
+
+object PersistentQueue {
+  @volatile var config: kestrel.config.PersistentQueue = new kestrel.config.PersistentQueue {}
+/*  def configure(config: ConfigMap) = synchronized {
+    maxItems set config.getInt("max_items")
+    maxSize set config.getLong("max_size")
+    maxItemSize set config.getLong("max_item_size")
+    maxAge set config.getInt("max_age")
+    maxJournalSize set config.getLong("max_journal_size")
+    maxMemorySize set config.getLong("max_memory_size")
+    maxJournalOverflow set config.getInt("max_journal_overflow")
+    maxJournalSizeAbsolute set config.getLong("max_journal_size_absolute")
+    discardOldWhenFull set config.getBool("discard_old_when_full")
+    keepJournal set config.getBool("journal")
+    syncJournal set config.getBool("sync_journal")
+    expiredQueue set config.getString("move_expired_to").map { qname => Kestrel.queues.queue(qname) }
+    log.info("Configuring queue %s: journal=%s, max_items=%d, max_size=%d, max_age=%d, max_journal_size=%d, " +
+             "max_memory_size=%d, max_journal_overflow=%d, max_journal_size_absolute=%d, " +
+             "discard_old_when_full=%s, sync_journal=%s",
+             name, keepJournal(), maxItems(), maxSize(), maxAge(), maxJournalSize(), maxMemorySize(),
+             maxJournalOverflow(), maxJournalSizeAbsolute(), discardOldWhenFull(), syncJournal())
+    if (!keepJournal()) journal.erase()
+  } */
+  def configMapToStruct(configMap: ConfigMap) = {
+    new kestrel.config.PersistentQueue {
+      override def maxItems: Int = configMap.getInt("max_items", super.maxItems)
+      override def maxSize: Long = configMap.getLong("max_size", super.maxSize)
+      override def maxItemSize: Long = configMap.getLong("max_item_size", super.maxItemSize)
+      override def maxAge: Int = configMap.getInt("max_age", super.maxAge)
+      override def maxJournalSize: Long = configMap.getLong("max_journal_size", super.maxJournalSize)
+      override def maxMemorySize: Long = configMap.getLong("max_memory_size", super.maxMemorySize)
+      override def maxJournalOverflow: Int = configMap.getInt("max_journal_overflow", super.maxJournalOverflow)
+      override def maxJournalSizeAbsolute: Long = configMap.getLong("max_journal_size_absolute", super.maxJournalSizeAbsolute)
+      override def discardOldWhenFull: Boolean = configMap.getBool("discard_old_when_full", super.discardOldWhenFull)
+      override def keepJournal: Boolean = configMap.getBool("journal", super.keepJournal)
+      override def syncJournal: Boolean = configMap.getBool("sync_journal", super.syncJournal)
+      override def expiredQueue: Option[String] = configMap.getString("move_expired_to")
+    }
+  }
+}
+
 class PersistentQueue(persistencePath: String, val name: String,
                       val config: kestrel.config.PersistentQueue) {
+
+  def this(persistencePath: String, name: String, config: ConfigMap) = this(persistencePath, name, PersistentQueue.configMapToStruct(config))
 
   private case class Waiter(actor: Actor)
   private case object ItemArrived
@@ -151,27 +195,7 @@ class PersistentQueue(persistencePath: String, val name: String,
 
 /*  config.subscribe { c => configure(c.getOrElse(new Config)) }
   configure(config)
-
-  def configure(config: ConfigMap) = synchronized {
-    maxItems set config.getInt("max_items")
-    maxSize set config.getLong("max_size")
-    maxItemSize set config.getLong("max_item_size")
-    maxAge set config.getInt("max_age")
-    maxJournalSize set config.getLong("max_journal_size")
-    maxMemorySize set config.getLong("max_memory_size")
-    maxJournalOverflow set config.getInt("max_journal_overflow")
-    maxJournalSizeAbsolute set config.getLong("max_journal_size_absolute")
-    discardOldWhenFull set config.getBool("discard_old_when_full")
-    keepJournal set config.getBool("journal")
-    syncJournal set config.getBool("sync_journal")
-    expiredQueue set config.getString("move_expired_to").map { qname => Kestrel.queues.queue(qname) }
-    log.info("Configuring queue %s: journal=%s, max_items=%d, max_size=%d, max_age=%d, max_journal_size=%d, " +
-             "max_memory_size=%d, max_journal_overflow=%d, max_journal_size_absolute=%d, " +
-             "discard_old_when_full=%s, sync_journal=%s",
-             name, keepJournal(), maxItems(), maxSize(), maxAge(), maxJournalSize(), maxMemorySize(),
-             maxJournalOverflow(), maxJournalSizeAbsolute(), discardOldWhenFull(), syncJournal())
-    if (!keepJournal()) journal.erase()
-  } */
+*/
 
   def dumpConfig(): Array[String] = synchronized {
     Array(
@@ -556,8 +580,4 @@ class PersistentQueue(persistencePath: String, val name: String,
       _memoryBytes += item.data.length
     }
   }
-}
-
-object PersistentQueue {
-  @volatile var config: kestrel.config.PersistentQueue = new kestrel.config.PersistentQueue {}
 }
