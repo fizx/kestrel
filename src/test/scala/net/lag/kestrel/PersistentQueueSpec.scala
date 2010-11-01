@@ -71,7 +71,7 @@ class PersistentQueueSpec extends Specification with TestHelper {
   def withMaxMemorySize(newLimit: Long)(f: => Unit) = {
     val oldConfig = PersistentQueue.config
     PersistentQueue.config = new kestrel.config.PersistentQueue {
-      override lazy val maxMemorySize = newLimit
+      override val maxMemorySize = newLimit
     }
     try {
       f
@@ -122,7 +122,7 @@ class PersistentQueueSpec extends Specification with TestHelper {
     "resist adding an item that's too large" in {
       withTempFolder {
         val q = new PersistentQueue(folderName, "work", new kestrel.config.PersistentQueue {
-          override lazy val maxItemSize = 128L
+          override val maxItemSize = 128L
         })
         q.setup
         q.length mustEqual 0
@@ -243,7 +243,7 @@ class PersistentQueueSpec extends Specification with TestHelper {
     "honor max_age" in {
       withTempFolder {
         val q = makeQueue("weather_updates", new kestrel.config.PersistentQueue {
-          override lazy val maxAge = 3
+          override val maxAge = 3
         })
         q.setup
         q.add("sunny".getBytes) mustEqual true
@@ -262,12 +262,12 @@ class PersistentQueueSpec extends Specification with TestHelper {
     "allow max_journal_size and max_memory_size to be overridden per queue" in {
       withTempFolder {
         val q1 = makeQueue("test1", new kestrel.config.PersistentQueue {
-          override lazy val maxMemorySize = 123L
+          override val maxMemorySize = 123L
         })
         q1.maxJournalSize mustEqual PersistentQueue.config.maxJournalSize
         q1.maxMemorySize mustEqual 123
         val q2 = makeQueue("test2", new kestrel.config.PersistentQueue {
-          override lazy val maxJournalSize = 123L
+          override val maxJournalSize = 123L
         })
         q2.maxJournalSize mustEqual 123
         q2.maxMemorySize mustEqual PersistentQueue.config.maxMemorySize
@@ -521,8 +521,8 @@ class PersistentQueueSpec extends Specification with TestHelper {
     "recreate the journal file when it gets too big" in {
       withTempFolder {
         val q = makeQueue("things", new kestrel.config.PersistentQueue {
-          override lazy val maxJournalSize = 1024L
-          override lazy val maxJournalOverflow = 3
+          override val maxJournalSize = 1024L
+          override val maxJournalOverflow = 3
         })
         q.setup
         q.add(new Array[Byte](512))
@@ -551,8 +551,8 @@ class PersistentQueueSpec extends Specification with TestHelper {
     "don't recreate the journal file if the queue itself is still huge" in {
       withTempFolder {
         val q = makeQueue("things", new kestrel.config.PersistentQueue {
-          override lazy val maxJournalSize = 1024L
-          override lazy val maxJournalOverflow = 3
+          override val maxJournalSize = 1024L
+          override val maxJournalOverflow = 3
         })
         q.setup
         for (i <- 0 until 8) {
@@ -583,7 +583,7 @@ class PersistentQueueSpec extends Specification with TestHelper {
     "create no journal" in {
       withTempFolder {
         val q = makeQueue("mem", new kestrel.config.PersistentQueue {
-          override lazy val keepJournal = false
+          override val keepJournal = false
         })
         q.setup
 
@@ -596,14 +596,14 @@ class PersistentQueueSpec extends Specification with TestHelper {
     "lose all data after being destroyed" in {
       withTempFolder {
         val q = makeQueue("mem", new kestrel.config.PersistentQueue {
-          override lazy val keepJournal = false
+          override val keepJournal = false
         })
         q.setup
         q.add("coffee".getBytes)
         q.close
 
         val q2 = makeQueue("mem", new kestrel.config.PersistentQueue {
-          override lazy val keepJournal = false
+          override val keepJournal = false
         })
         q2.setup
         q2.remove mustEqual None
@@ -616,7 +616,7 @@ class PersistentQueueSpec extends Specification with TestHelper {
     "honor max_items" in {
       withTempFolder {
         val q = makeQueue("weather_updates", new kestrel.config.PersistentQueue {
-          override lazy val maxItems = 1
+          override val maxItems = 1
         })
         q.setup
         q.add("sunny".getBytes) mustEqual true
@@ -629,7 +629,7 @@ class PersistentQueueSpec extends Specification with TestHelper {
     "honor max_size" in {
       withTempFolder {
         val q = makeQueue("weather_updates", new kestrel.config.PersistentQueue {
-          override lazy val maxSize = 510L
+          override val maxSize = 510L
         })
         q.setup
         q.add(("a" * 256).getBytes) mustEqual true
@@ -644,8 +644,8 @@ class PersistentQueueSpec extends Specification with TestHelper {
     "drop older items when discard_old_when_full is set" in {
       withTempFolder {
         val q = makeQueue("weather_updates", new kestrel.config.PersistentQueue {
-          override lazy val maxItems = 3
-          override lazy val discardOldWhenFull = true
+          override val maxItems = 3
+          override val discardOldWhenFull = true
         })
         q.setup
         q.add("sunny".getBytes) mustEqual true
