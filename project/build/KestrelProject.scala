@@ -3,7 +3,7 @@ import com.twitter.sbt._
 
 class KestrelProject(info: ProjectInfo) extends StandardProject(info) with SubversionPublisher {
   val configgy = "net.lag" % "configgy" % "1.6.4"
-  val util = "com.twitter" % "util" % "1.1"
+  val util = "com.twitter" % "util" % "1.1.1"
 
   val specs = "org.scala-tools.testing" % "specs" % "1.6.2.1" % "test"
   val vscaladoc = "org.scala-tools" % "vscaladoc" % "1.1-md-3" % "test"
