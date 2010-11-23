@@ -113,8 +113,7 @@ class Journal(queuePath: String, syncJournal: => Boolean) {
   def isReplaying(): Boolean = replayer.isDefined
 
   private def add(allowSync: Boolean, item: QItem): Unit = {
-    val blob = ByteBuffer.wrap(item.pack())
-    size += write(false, CMD_ADDX.toByte, blob.limit)
+    val blob = item.pack(CMD_ADDX.toByte, false)
     do {
       writer.write(blob)
     } while (blob.position < blob.limit)
@@ -126,13 +125,11 @@ class Journal(queuePath: String, syncJournal: => Boolean) {
 
   // used only to list pending transactions when recreating the journal.
   private def addWithXid(item: QItem) = {
-    val blob = ByteBuffer.wrap(item.pack())
-
-    // only called from roll(), so the journal does not need to be synced after a write.
-    size += write(false, CMD_ADD_XID.toByte, item.xid, blob.limit)
+    val blob = item.pack(CMD_ADD_XID.toByte, true)
     do {
       writer.write(blob)
     } while (blob.position < blob.limit)
+    // only called from roll(), so the journal does not need to be synced after a write.
     size += blob.limit
   }
 
@@ -270,7 +267,7 @@ class Journal(queuePath: String, syncJournal: => Boolean) {
             item.xid = xid
             (JournalItem.Add(item), 9 + data.length)
           case n =>
-            throw new BrokenItemException(lastPosition, new IOException("invalid opcode in journal: " + n.toInt + " at position " + in.position))
+            throw new BrokenItemException(lastPosition, new IOException("invalid opcode in journal: " + n.toInt + " at position " + (in.position - 1)))
         }
       } catch {
         case ex: IOException =>

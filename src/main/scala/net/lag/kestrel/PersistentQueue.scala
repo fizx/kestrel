@@ -74,6 +74,7 @@ object PersistentQueue {
       override def keepJournal: Boolean = configMap.getBool("journal", super.keepJournal)
       override def syncJournal: Boolean = configMap.getBool("sync_journal", super.syncJournal)
       override def expiredQueue: Option[String] = configMap.getString("move_expired_to")
+      override def maxExpireSweep: Int = configMap.getInt("max_expire_sweep", super.maxExpireSweep)
     }
   }
 }
@@ -166,8 +167,11 @@ class PersistentQueue(persistencePath: String, val name: String,
   @volatile var expiredQueue = config.expiredQueue.map { qname => Kestrel.queues.queue(qname).get }
 //  val expiredQueue = overlay(PersistentQueue.expiredQueue)
 
+  // maximum number of items to expire at once
+  @volatile var maxExpireSweep = config.maxExpireSweep
+
   // clients waiting on an item in this queue
-  private val waiters = new mutable.ArrayBuffer[Waiter]
+  private val waiters = new mutable.ListBuffer[Waiter]
 
   private var journal = new Journal(new File(persistencePath, name).getCanonicalPath, syncJournal)
 
@@ -514,7 +518,7 @@ class PersistentQueue(persistencePath: String, val name: String,
   //  -----  internal implementations
 
   private def _add(item: QItem): Unit = {
-    discardExpired()
+    discardExpired(maxExpireSweep)
     if (!journal.inReadBehind) {
       queue += item
       _memoryBytes += item.data.length
@@ -525,12 +529,12 @@ class PersistentQueue(persistencePath: String, val name: String,
   }
 
   private def _peek(): Option[QItem] = {
-    discardExpired()
+    discardExpired(maxExpireSweep)
     if (queue.isEmpty) None else Some(queue.front)
   }
 
   private def _remove(transaction: Boolean): Option[QItem] = {
-    discardExpired()
+    discardExpired(maxExpireSweep)
     if (queue.isEmpty) return None
 
     val now = Time.now.inMilliseconds
@@ -550,8 +554,8 @@ class PersistentQueue(persistencePath: String, val name: String,
     Some(item)
   }
 
-  final def discardExpired(): Int = {
-    if (queue.isEmpty || journal.isReplaying) {
+  final def discardExpired(max: Int): Int = {
+    if (queue.isEmpty || journal.isReplaying || max <= 0) {
       0
     } else {
       val realExpiry = adjustExpiry(queue.front.addTime, queue.front.expiry)
@@ -565,7 +569,7 @@ class PersistentQueue(persistencePath: String, val name: String,
         fillReadBehind
         if (keepJournal) journal.remove()
         expiredQueue.map { _.add(item.data, 0) }
-        1 + discardExpired
+        1 + discardExpired(max - 1)
       } else {
         0
       }

@@ -16,6 +16,7 @@ trait PersistentQueue {
   def keepJournal: Boolean = true
   def syncJournal: Boolean = false
   def expiredQueue: Option[String] = None
+  def maxExpireSweep: Int = Math.MAX_INT
 
   def apply(persistencePath: String, name: String): kestrel.PersistentQueue = {
     new kestrel.PersistentQueue(persistencePath, name, this)
