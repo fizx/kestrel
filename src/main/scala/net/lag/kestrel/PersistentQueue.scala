@@ -554,7 +554,7 @@ class PersistentQueue(persistencePath: String, val name: String,
     Some(item)
   }
 
-  final def discardExpired(max: Int): Int = {
+  final def discardExpired(max: Int): Int = synchronized {
     if (queue.isEmpty || journal.isReplaying || max <= 0) {
       0
     } else {
